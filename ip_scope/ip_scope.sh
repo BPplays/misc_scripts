@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+
+skip_gaps=false
+if [[ "$1" == "-s" ]]; then
+	skip_gaps=true
+	shift  # remove -s from arguments
+fi
+
 # Print ff{id}{scope}::/16 entries grouped and titled with scope names from RFC 7346.
 # RFC 7346: IPv6 Multicast Address Scopes.
 scopes=( "1" "2" "3" "4" "5" "8" "e" )
@@ -29,7 +36,9 @@ name_template=${1:-'ff{id}{scope}::/16'}
 
 for scope in "${scopes[@]}"; do
 	# print a title line using the RFC name
-	printf '# Scope %s — %s\n' "$scope" "${scope_name[$scope]}"
+	if [[ "$skip_gaps" == false ]]; then
+		printf '# Scope %s — %s\n' "$scope" "${scope_name[$scope]}"
+	fi
 
 	# Determine if template includes id
 	if [[ "$name_template" == *"y"* || "$name_template" == *"{id}"* ]]; then
@@ -53,5 +62,7 @@ for scope in "${scopes[@]}"; do
 		printf '%s\n' "$out"
 	fi
 
-	printf "\n"
+	if [[ "$skip_gaps" == false ]]; then
+		printf "\n"
+	fi
 done
