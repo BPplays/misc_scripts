@@ -7,44 +7,42 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
 
 var (
 	timeoutSec = flag.Int("timeout", 5, "lookup timeout in seconds per host")
+	guaList    = flag.Bool("gua-list", false, "after the main output, print a plain list of domains that had GUA addresses (one per line)")
 )
 
 type ipClass string
 
 const (
-	classGUA        ipClass = "GUA"
-	classULA        ipClass = "ULA"
-	classLinkLocal  ipClass = "LinkLocal"
-	classMulticast  ipClass = "Multicast"
-	classLoopback   ipClass = "Loopback"
+	classGUA         ipClass = "GUA"
+	classULA         ipClass = "ULA"
+	classLinkLocal   ipClass = "LinkLocal"
+	classMulticast   ipClass = "Multicast"
+	classLoopback    ipClass = "Loopback"
 	classUnspecified ipClass = "Unspecified"
-	classDoc        ipClass = "Documentation"
-	classOther      ipClass = "Other"
+	classDoc         ipClass = "Documentation"
+	classOther       ipClass = "Other"
 )
 
 func classifyIPv6(ip net.IP) ipClass {
-	// Ensure it's 16-byte IPv6
 	ip = ip.To16()
 	if ip == nil || ip.To4() != nil {
 		return classOther
 	}
 
-	// Define known ranges
-	var (
-		_, netGUA, _       = net.ParseCIDR("2000::/3")    // global unicast
-		_, netULA, _       = net.ParseCIDR("fc00::/7")    // unique local
-		_, netLinkLocal, _ = net.ParseCIDR("fe80::/10")   // link-local
-		_, netMulticast, _ = net.ParseCIDR("ff00::/8")    // multicast
-		_, netDoc, _       = net.ParseCIDR("2001:db8::/32") // documentation
-		loopback           = net.ParseIP("::1")
-		unspecified        = net.ParseIP("::")
-	)
+	_, netGUA, _ := net.ParseCIDR("2000::/3")     // global unicast
+	_, netULA, _ := net.ParseCIDR("fc00::/7")     // unique local
+	_, netLinkLocal, _ := net.ParseCIDR("fe80::/10") // link-local
+	_, netMulticast, _ := net.ParseCIDR("ff00::/8")  // multicast
+	_, netDoc, _ := net.ParseCIDR("2001:db8::/32")   // documentation
+	loopback := net.ParseIP("::1")
+	unspecified := net.ParseIP("::")
 
 	switch {
 	case ip.Equal(unspecified):
@@ -79,7 +77,6 @@ func processLine(line string, resolver *net.Resolver, timeout time.Duration) (st
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Use LookupIPAddr so we can control via context
 	addrs, err := resolver.LookupIPAddr(ctx, name)
 	if err != nil {
 		return name, nil, err
@@ -102,7 +99,7 @@ func processLine(line string, resolver *net.Resolver, timeout time.Duration) (st
 func main() {
 	flag.Parse()
 	if flag.NArg() < 1 {
-		fmt.Fprintf(os.Stderr, "usage: %s <input-file>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [flags] <input-file>\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
@@ -120,6 +117,10 @@ func main() {
 
 	scanner := bufio.NewScanner(f)
 	lineno := 0
+
+	// collect domains that had GUA addresses
+	guaDomains := make(map[string]struct{})
+
 	for scanner.Scan() {
 		lineno++
 		line := scanner.Text()
@@ -138,10 +139,39 @@ func main() {
 		}
 		// Print one line per hostname with comma-separated IPs + classes
 		fmt.Printf("%d\t%s\t%s\n", lineno, name, strings.Join(results, ", "))
+
+		// if any result is GUA, record the domain
+		for _, r := range results {
+			if strings.HasSuffix(r, "("+string(classGUA)+")") {
+				guaDomains[name] = struct{}{}
+				break
+			}
+		}
 	}
 
 	if serr := scanner.Err(); serr != nil {
 		fmt.Fprintf(os.Stderr, "error reading file: %v\n", serr)
 		os.Exit(1)
+	}
+
+	// If requested, print the plain list after the main output
+	if *guaList {
+		if len(guaDomains) > 0 {
+			// stable order
+			names := make([]string, 0, len(guaDomains))
+			for n := range guaDomains {
+				names = append(names, n)
+			}
+			sort.Strings(names)
+			fmt.Println()
+			fmt.Println(strings.Repeat("=", 80))
+			fmt.Println()
+			for _, n := range names {
+				fmt.Println(n)
+			}
+		} else {
+			// still print nothing (just an empty section) - or you can print a message if preferred
+			fmt.Println()
+		}
 	}
 }
