@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use tabled::{
     settings::{
         object::Rows,
+        object::Columns,
         style::Style,
         Color,
         Modify,
@@ -151,6 +152,20 @@ fn main() {
 
     table
         .with(Style::rounded())
+        .with(
+            Modify::new(Columns::one(0))
+            .with(Color::FG_BRIGHT_GREEN),
+        )
+
+        .with(
+            Modify::new(Columns::one(6))
+            .with(Color::FG_BRIGHT_YELLOW),
+        )
+
+        .with(
+            Modify::new(Columns::one(7))
+            .with(Color::FG_BRIGHT_MAGENTA),
+        )
         .with(
             Modify::new(Rows::first())
                 .with(Color::FG_BLUE),
