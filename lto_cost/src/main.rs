@@ -33,8 +33,8 @@ impl Tape {
         self.tape_price_usd / self.capacity_tb
     }
 
-    fn tapes_needed(&self, required_tb: f64) -> u32 {
-        (required_tb / self.capacity_tb).ceil() as u32
+    fn tapes_needed(&self, required_tb: f64) -> u64 {
+        (required_tb / self.capacity_tb).ceil() as u64
     }
 
     fn total_cost(&self, required_tb: f64, drive_prices: &HashMap<&str, f64>) -> f64 {
@@ -69,7 +69,7 @@ struct Row {
     media_price_per_tb: String,
 
     #[tabled(rename = "Tapes")]
-    tapes: u32,
+    tapes: u64,
 
     #[tabled(rename = "Total $")]
     total_cost: String,
