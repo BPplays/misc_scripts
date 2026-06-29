@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+clap = { version = "4.6.1", features = ["unicode", "string", "derive", "env"] }
 owo-colors = { version = "4.3.0", features = ["supports-color", "supports-colors", "alloc"] }
 
 tabled = { version = "0.21", features = ["ansitok", "ansi-str", "ansi"] }

@@ -10,6 +10,15 @@ use tabled::{
     },
     Table, Tabled,
 };
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Cli {
+    /// Amount of storage to compare against (TB)
+    #[arg(short, long, default_value_t = 500.0)]
+    size: f64,
+}
 
 #[derive(Debug)]
 struct Tape {
@@ -117,7 +126,10 @@ fn main() {
         },
     ];
 
-    let required_tb = 500.0;
+
+    let cli = Cli::parse();
+
+    let required_tb = cli.size;
 
     let mut ranked: Vec<&Tape> = tapes.iter().collect();
 
