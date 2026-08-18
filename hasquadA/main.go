@@ -131,9 +131,16 @@ func main() {
 	// collect domains that had GUA addresses
 	guaDomains := make(map[string]struct{})
 
+	seen := make(map[string]struct{})
+
+
 	for scanner.Scan() {
 		lineno++
 		line := scanner.Text()
+		if _, exists := seen[line]; exists {
+			continue
+		}
+		seen[line] = struct{}{}
 		name, results, err := processLine(line, resolver, timeout)
 		if name == "" && len(results) == 0 && err == nil {
 			// blank or comment
