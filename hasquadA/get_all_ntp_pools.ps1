@@ -30,6 +30,7 @@ $zones = Get-NtpZones |
         $children
     } |
     Where-Object { $_ -ne '@' } |
+    Where-Object { $_ -ne '.' } |
     Sort-Object -Unique
 
 $zones | ForEach-Object {
