@@ -15,7 +15,7 @@ import (
 var (
 	timeoutSec = flag.Int("timeout", 5, "lookup timeout in seconds per host")
 	guaList    = flag.Bool("gua-list", true, "after the main output, print a plain list of domains that had GUA addresses (one per line)")
-	guaListYaml    = flag.Bool("gua-list-yml", true, "output yaml")
+	guaListFormat    = flag.String("gua-list-fmt", "", "gua list format")
 )
 
 type ipClass string
@@ -177,8 +177,8 @@ func main() {
 			fmt.Println(strings.Repeat("=", 80))
 			fmt.Println()
 			for _, n := range names {
-				if *guaListYaml {
-					fmt.Printf("- \"%s\"\n", n)
+				if *guaListFormat != "" {
+					fmt.Printf(*guaListFormat, n)
 				} else {
 					fmt.Println(n)
 				}
