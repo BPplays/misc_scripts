@@ -7,9 +7,6 @@ ntp1.net.berkeley.edu
 ntp2.net.berkeley.edu
 clock.sjc.he.net
 clock.fmt.he.net
-2.pool.ntp.org
-2.north-america.pool.ntp.org
-2.us.pool.ntp.org
 time1.facebook.com
 time2.facebook.com
 time3.facebook.com
@@ -31,5 +28,33 @@ time-e-wwv.nist.gov
 time.nist.gov
 
 tick.ucla.edu
+
+
+
+# ntp pool
+
+2.pool.ntp.org
+
+2.north-america.pool.ntp.org
+2.us.pool.ntp.org
+
+2.asia.pool.ntp.org
+2.jp.pool.ntp.org
+# Singapore
+sg.pool.ntp.org
+# Taiwan
+tw.pool.ntp.org
+
+
+
+2.debian.pool.ntp.org
+2.ubuntu.pool.ntp.org
+2.centos.pool.ntp.org
+2.fedora.pool.ntp.org
+2.rhel.pool.ntp.org
+2.openwrt.pool.ntp.org
+2.arch.pool.ntp.org
+2.nokia.pool.ntp.org
+2.siemens.pool.ntp.org
 
 

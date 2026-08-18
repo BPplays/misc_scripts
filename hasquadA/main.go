@@ -66,6 +66,15 @@ func classifyIPv6(ip net.IP) ipClass {
 
 func processLine(line string, resolver *net.Resolver, timeout time.Duration) (string, []string, error) {
 	name := strings.TrimSpace(line)
+
+	if name == "" || strings.HasPrefix(name, "#") {
+		return "", nil, nil
+	}
+
+	if before, _, found := strings.Cut(name, "#"); found {
+		name = strings.TrimSpace(before)
+	}
+
 	if name == "" {
 		return "", nil, nil
 	}
