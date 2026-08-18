@@ -1,43 +1,37 @@
-$baseUri = 'https://api.ntppool.org/zone'
+$api = 'https://api.ntppool.org/zone'
 
-function Get-NtpPoolZones {
+function Get-NtpZones {
     param(
-        [Parameter(Mandatory)]
-        [string] $Zone,
-
-        [Collections.Generic.HashSet[string]] $Visited = (
-            [Collections.Generic.HashSet[string]]::new()
-        )
+        [string] $Zone = '@'
     )
 
-    if (-not $Visited.Add($Zone)) {
-        return
-    }
+    $html = (Invoke-RestMethod "$api/$Zone").ToString()
+	#Write-Output $html
 
-    # Return this zone too.
-    $Zone
-
-    $html = (Invoke-WebRequest "$baseUri/$Zone").Content
-
-    $children = [regex]::Matches(
-        $html,
-        'href="/zone/([^"]+)"'
-    ) |
+    # The API response contains links like:
+    #   /zone/north-america
+    #   /zone/us
+    [regex]::Matches($html, 'href="/zone/([^"]+)"') |
         ForEach-Object { $_.Groups[1].Value } |
-        Where-Object {
-            $_ -ne $Zone -and
-            $_ -notmatch '^@'
-        } |
         Sort-Object -Unique
-
-    foreach ($child in $children) {
-        Get-NtpPoolZones -Zone $child -Visited $Visited
-    }
 }
 
-Get-NtpPoolZones '@' |
-    Sort-Object -Unique |
-    Where-Object { $_ -ne '@' } |
+$zones = Get-NtpZones |
     ForEach-Object {
-        "2.$_.pool.ntp.org"
-    }
+        $zone = $_
+
+        # Get each region's children
+        $children = Get-NtpZones $zone
+
+        # Keep the region itself
+        $zone
+
+        # And its countries
+        $children
+    } |
+    Where-Object { $_ -ne '@' } |
+    Sort-Object -Unique
+
+$zones | ForEach-Object {
+    "2.$_.pool.ntp.org"
+}
