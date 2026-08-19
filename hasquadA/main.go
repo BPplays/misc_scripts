@@ -31,6 +31,11 @@ const (
 	classOther       ipClass = "Other"
 )
 
+type ipAndClass struct {
+	ip net.IP
+	class ipClass
+}
+
 func classifyIPv6(ip net.IP) ipClass {
 	ip = ip.To16()
 	if ip == nil || ip.To4() != nil {
@@ -65,7 +70,15 @@ func classifyIPv6(ip net.IP) ipClass {
 	}
 }
 
-func processLine(line string, resolver *net.Resolver, timeout time.Duration) (string, []string, error) {
+func processLine(
+	line string,
+	resolver *net.Resolver,
+	timeout time.Duration,
+) (
+	string,
+	[]ipAndClass,
+	error,
+) {
 	name := strings.TrimSpace(line)
 
 	if name == "" || strings.HasPrefix(name, "#") {
@@ -92,7 +105,7 @@ func processLine(line string, resolver *net.Resolver, timeout time.Duration) (st
 		return name, nil, err
 	}
 
-	var results []string
+	var results []ipAndClass
 	for _, a := range addrs {
 		ip := a.IP
 		// skip IPv4
@@ -100,10 +113,18 @@ func processLine(line string, resolver *net.Resolver, timeout time.Duration) (st
 			continue
 		}
 		cls := classifyIPv6(ip)
-		results = append(results, fmt.Sprintf("%s (%s)", ip.String(), cls))
+		// results = append(results, fmt.Sprintf("%s (%s)", ip.String(), cls))
+		results = append(results, ipAndClass{ip: ip, class: cls})
 	}
 
 	return name, results, nil
+}
+
+func formatIipAndClassToSliceString(ips []ipAndClass) (output []string) {
+	for _, ip := range ips {
+		output = append(output, fmt.Sprintf("%s (%s)", ip.ip.String(), ip.class))
+	}
+	return output
 }
 
 func main() {
@@ -155,11 +176,14 @@ func main() {
 			continue
 		}
 		// Print one line per hostname with comma-separated IPs + classes
-		fmt.Printf("%d\t%s\t%s\n", lineno, name, strings.Join(results, ", "))
+		fmt.Printf("%d\t%s\t%s\n", lineno, name, strings.Join(
+			formatIipAndClassToSliceString(results),
+			", ",
+		))
 
 		// if any result is GUA, record the domain
 		for _, r := range results {
-			if strings.HasSuffix(r, "("+string(classGUA)+")") {
+			if r.class == classGUA {
 				guaDomains[name] = struct{}{}
 				break
 			}
