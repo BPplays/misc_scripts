@@ -28,6 +28,8 @@ const (
 	classLoopback    ipClass = "Loopback"
 	classUnspecified ipClass = "Unspecified"
 	classDoc         ipClass = "Documentation"
+	classNAT64         ipClass = "NAT64"
+	classV4Mapped         ipClass = "IPv4-mapped IPv6 address"
 	classOther       ipClass = "Other"
 )
 
@@ -47,6 +49,12 @@ func classifyIPv6(ip net.IP) ipClass {
 	_, netLinkLocal, _ := net.ParseCIDR("fe80::/10") // link-local
 	_, netMulticast, _ := net.ParseCIDR("ff00::/8")  // multicast
 	_, netDoc, _ := net.ParseCIDR("2001:db8::/32")   // documentation
+
+
+	_, netNAT64, _ := net.ParseCIDR("64:ff9b::/96")
+	_, netNAT64_2, _ := net.ParseCIDR("64:ff9b:1::/48")
+	_, netV4Mapped, _ := net.ParseCIDR("::ffff:0:0/96")
+
 	loopback := net.ParseIP("::1")
 	unspecified := net.ParseIP("::")
 
@@ -63,6 +71,16 @@ func classifyIPv6(ip net.IP) ipClass {
 		return classULA
 	case netDoc.Contains(ip):
 		return classDoc
+
+	case netNAT64.Contains(ip):
+		return classNAT64
+
+	case netNAT64_2.Contains(ip):
+		return classNAT64
+
+	case netV4Mapped.Contains(ip):
+		return classV4Mapped
+
 	case netGUA.Contains(ip):
 		return classGUA
 	default:
