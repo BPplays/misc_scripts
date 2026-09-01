@@ -12,6 +12,11 @@ time2.facebook.com
 time3.facebook.com
 time4.facebook.com
 time5.facebook.com
+time1.meta.com
+time2.meta.com
+time3.meta.com
+time4.meta.com
+time5.meta.com
 x.ns.gin.ntt.net
 y.ns.gin.ntt.net
 
